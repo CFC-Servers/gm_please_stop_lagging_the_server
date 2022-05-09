@@ -15,6 +15,9 @@ LagAlert.statusPanel = nil
 LagAlert.displayingStatus = false
 LagAlert.currentStatus = "good"
 
+LagAlert.fireLoop = CreateSound( LocalPlayer(), "ambient/fire/fire_med_loop1.wav" )
+LagAlert.fireLoop:Stop()
+
 local function setStatus( status )
     if LagAlert.currentStatus == status then return end
     timer.Remove( "LagAlert_GoodCooldown" )
@@ -25,14 +28,29 @@ local function setStatus( status )
     end
 
     if status == "good" then
+        -- Hide the numbers
+        LagAlert.statusPanel.LagMeter:SetVisible( false )
+
+        -- Start fade out
         LagAlert.statusPanel:AlphaTo( 0, 4, 1 )
+
         timer.Create( "LagAlert_GoodCooldown", 5, 1, function()
             LagAlert.statusPanel:Clear()
             LagAlert.statusPanel:Remove()
             LagAlert.statusPanel = nil
             LagAlert.displayingStatus = false
+            LagAlert.fireLoop:Stop()
         end )
-    else
+    end
+
+    if status == "okay" then
+        LagAlert.fireLoop:FadeOut( 3 )
+        LagAlert.statusPanel:Stop()
+        LagAlert.statusPanel:SetAlpha( 255 )
+    end
+
+    if status == "bad" then
+        LagAlert.fireLoop:Play()
         LagAlert.statusPanel:Stop()
         LagAlert.statusPanel:SetAlpha( 255 )
     end
