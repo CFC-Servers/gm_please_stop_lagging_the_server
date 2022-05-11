@@ -9,7 +9,7 @@ end
 
 function PANEL:Init()
     self:SetSize( 100, 200 )
-    self:SetPos( 1200, 1275 )
+    self:SetPos( 150, 100 )
     self.PerformanceLoss = 0
     self.Status = nil
 

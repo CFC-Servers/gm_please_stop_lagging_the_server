@@ -9,17 +9,55 @@ do
     end
 end
 
-LagAlert = {}
+LagAlert = LagAlert or {}
 
 LagAlert.statusPanel = nil
 LagAlert.displayingStatus = false
 LagAlert.currentStatus = "good"
 
-LagAlert.fireLoop = CreateSound( LocalPlayer(), "ambient/fire/fire_med_loop1.wav" )
-LagAlert.fireLoop:Stop()
+local GREY = Color( 170, 170, 170 )
+local RED = Color( 225, 0, 0 )
+local GREEN = Color( 0, 225, 0 )
+local YELLOW = Color( 225, 225, 0 )
+local WHITE = Color( 225, 225, 225 )
 
-local function setStatus( status )
-    if LagAlert.currentStatus == status then return end
+local statusChanges = {
+    good = {
+        warn = {
+            GREY, "[Server] ",
+            WHITE, "Performance is ",
+            YELLOW, "DEGRADED"
+        }
+    },
+    warn = {
+        good = {
+            GREY, "[Server] ",
+            WHITE, "Performance has ",
+            GREEN, "RECOVERED"
+        },
+        bad = {
+            GREY, "[Server] ",
+            WHITE, "Performance is ",
+            RED, "CRITICAL"
+        }
+    },
+    bad = {
+        warn = {
+            GREY, "[Server] ",
+            WHITE, "Performance is ",
+            YELLOW, "RECOVERING"
+        }
+    }
+}
+
+local function alertChange( old, new )
+    chat.AddText( unpack( statusChanges[old][new] ) )
+end
+
+local function setStatus( newStatus )
+    local lastStatus = LagAlert.currentStatus
+
+    if lastStatus == newStatus then return end
     timer.Remove( "LagAlert_GoodCooldown" )
 
     if not LagAlert.displayingStatus then
@@ -27,36 +65,47 @@ local function setStatus( status )
         LagAlert.displayingStatus = true
     end
 
-    if status == "good" then
+    if newStatus == "good" then
         -- Hide the numbers
         LagAlert.statusPanel.LagMeter:SetVisible( false )
 
         -- Start fade out
         LagAlert.statusPanel:AlphaTo( 0, 4, 1 )
 
+        surface.PlaySound("garrysmod/save_load4.wav")
+
         timer.Create( "LagAlert_GoodCooldown", 5, 1, function()
             LagAlert.statusPanel:Clear()
             LagAlert.statusPanel:Remove()
             LagAlert.statusPanel = nil
             LagAlert.displayingStatus = false
-            LagAlert.fireLoop:Stop()
+
+            LagAlert.attention:Stop()
         end )
     end
 
-    if status == "okay" then
-        LagAlert.fireLoop:FadeOut( 3 )
+    if newStatus == "warn" then
         LagAlert.statusPanel:Stop()
         LagAlert.statusPanel:SetAlpha( 255 )
     end
 
-    if status == "bad" then
-        LagAlert.fireLoop:Play()
+    if newStatus == "bad" then
+        LagAlert.attention:PlayEx( 75, 100 )
+
+        timer.Simple( 1.2, function()
+            if LagAlert.attention:IsPlaying() then
+                LagAlert.attention:Stop()
+            end
+        end )
+
         LagAlert.statusPanel:Stop()
         LagAlert.statusPanel:SetAlpha( 255 )
     end
 
-    LagAlert.currentStatus = status
-    if LagAlert.statusPanel then LagAlert.statusPanel:SetType( status ) end
+    alertChange( lastStatus, newStatus )
+
+    LagAlert.currentStatus = newStatus
+    if LagAlert.statusPanel then LagAlert.statusPanel:SetType( newStatus ) end
 end
 
 local function init()
@@ -85,13 +134,16 @@ local function init()
         local removed = table_remove( samples )
 
         LagAlert.total = LagAlert.total - removed + newSample
-        LagAlert.average = LagAlert.total / sampleSize
+
+        local average = LagAlert.total / sampleSize
+        LagAlert.average = average
+
         table_insert( samples, 1, newSample )
 
         -- A number from 0-1 indicating the current performance deficit
         -- i.e. if the server was running at 22/66 tps, this number would be 0.66
-        LagAlert.performanceLoss = 1 - ( Clamp( tickInterval / newSample, 0, 1 ) )
-        local performanceLoss = LagAlert.performanceLoss
+        local performanceLoss = 1 - ( Clamp( tickInterval / average, 0, 1 ) )
+        LagAlert.performanceLoss = performanceLoss
 
         if LagAlert.displayingStatus then
             LagAlert.statusPanel.PerformanceLoss = math_floor( performanceLoss * 100 )
@@ -102,7 +154,7 @@ local function init()
         end
 
         if performanceLoss >= 0.5 then
-            return setStatus( "okay" )
+            return setStatus( "warn" )
         end
 
         -- If we were showing an alert but things went back to normal, show a good alert
@@ -112,9 +164,12 @@ local function init()
     end )
 end
 
-hook.Add( "Think", "LagAlert_Init", function()
-    hook.Remove( "Think", "LagAlert_Init" )
-    timer.Simple( 10, init )
+hook.Add( "InitPostEntity", "LagAlert_SoundInit", function()
+    LagAlert.attention = CreateSound( LocalPlayer(), "npc/overwatch/cityvoice/f_evasionbehavior_2_spkr.wav" )
+    LagAlert.attention:Stop()
 end )
 
-hook.Remove( "Think", "LagAlert_Measure" )
+hook.Add( "Think", "LagAlert_Init", function()
+    hook.Remove( "Think", "LagAlert_Init" )
+    timer.Simple( 60, init )
+end )

@@ -1,7 +1,7 @@
 local PANEL = {}
 PANEL.statusImages = {
     good = "materials/vgui/lagalert/server-stack-good.png",
-    okay = "materials/vgui/lagalert/server-stack-okay.png",
+    warn = "materials/vgui/lagalert/server-stack-okay.png",
     bad = "materials/vgui/lagalert/server-stack-bad.png"
 }
 
