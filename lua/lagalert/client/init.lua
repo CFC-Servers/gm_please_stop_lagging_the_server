@@ -4,7 +4,6 @@ do
 
     local elements = file.Find( vguiBase .. "/*.lua", "LUA" )
     for _, fileName in ipairs( elements ) do
-        print( "Loading: " .. vguiBase .. "/" .. fileName )
         include( vguiBase .. "/" .. fileName )
     end
 end
@@ -64,6 +63,7 @@ local function setStatus( newStatus )
         LagAlert.statusPanel = vgui.Create( "LagAlert_StatusPanel" )
         LagAlert.displayingStatus = true
     end
+
 
     if newStatus == "good" then
         -- Hide the numbers
