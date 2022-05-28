@@ -13,5 +13,10 @@ if SERVER then
 end
 
 if CLIENT then
-    include( "lagalert/client/init.lua" )
+    local enabled = CreateConVar( "lagalert_enabled", 0, FCVAR_ARCHIVE, "Should enable Lag Alerts", 0, 1 )
+
+    hook.Add( "InitPostEntity", "LagAlert_Enable", function()
+        if not enabled:GetBool() then return end
+        include( "lagalert/client/init.lua" )
+    end )
 end
