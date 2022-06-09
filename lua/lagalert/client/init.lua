@@ -49,8 +49,44 @@ local statusChanges = {
     }
 }
 
-local function alertChange( old, new )
+local function attentionPlease()
+    LagAlert.attention:PlayEx( 75, 100 )
+
+    timer.Simple( 1.2, function()
+        if LagAlert.attention:IsPlaying() then
+            LagAlert.attention:Stop()
+        end
+    end )
+end
+
+local function resolvedSound()
+    surface.PlaySound("garrysmod/save_load4.wav")
+end
+
+local lastAlert = 0
+local alertTimer = "LagAlert_StatusChange"
+local function _alertChange( old, new )
+    lastAlert = CurTime()
     chat.AddText( unpack( statusChanges[old][new] ) )
+
+    if new == "bad" then attentionPlease() end
+    if new == "good" then resolvedSound() end
+end
+
+local function alertChange( old, new )
+    local now = CurTime()
+
+    if lastAlert < now - 5 then
+        return _alertChange( old, new )
+    end
+
+    if timer.Exists( alertTimer ) then return end
+
+    local delay = ( lastAlert + 5 ) - now
+    timer.Create( alertTimer, delay, 1, function()
+        _alertChange( LagAlert.lastStatus, LagAlert.currentStatus )
+        timer.Remove( alertTimer )
+    end )
 end
 
 local function setStatus( newStatus )
@@ -64,15 +100,12 @@ local function setStatus( newStatus )
         LagAlert.displayingStatus = true
     end
 
-
     if newStatus == "good" then
         -- Hide the numbers
         LagAlert.statusPanel.LagMeter:SetVisible( false )
 
         -- Start fade out
         LagAlert.statusPanel:AlphaTo( 0, 4, 1 )
-
-        surface.PlaySound("garrysmod/save_load4.wav")
 
         timer.Create( "LagAlert_GoodCooldown", 5, 1, function()
             LagAlert.statusPanel:Clear()
@@ -90,20 +123,13 @@ local function setStatus( newStatus )
     end
 
     if newStatus == "bad" then
-        LagAlert.attention:PlayEx( 75, 100 )
-
-        timer.Simple( 1.2, function()
-            if LagAlert.attention:IsPlaying() then
-                LagAlert.attention:Stop()
-            end
-        end )
-
         LagAlert.statusPanel:Stop()
         LagAlert.statusPanel:SetAlpha( 255 )
     end
 
     alertChange( lastStatus, newStatus )
 
+    LagAlert.lastStatus = lastStatus
     LagAlert.currentStatus = newStatus
     if LagAlert.statusPanel then LagAlert.statusPanel:SetType( newStatus ) end
 end
@@ -149,17 +175,17 @@ local function init()
             LagAlert.statusPanel.PerformanceLoss = math_floor( performanceLoss * 100 )
         end
 
-        if performanceLoss >= 0.8 then
+        if performanceLoss >= 0.85 then
             return setStatus( "bad" )
         end
 
-        if performanceLoss >= 0.5 then
+        if performanceLoss >= 0.8 then
             return setStatus( "warn" )
         end
 
         -- If we were showing an alert but things went back to normal, show a good alert
         if LagAlert.displayingStatus and performanceLoss <= 0 then
-            setStatus( "good" )
+            return setStatus( "good" )
         end
     end )
 end
