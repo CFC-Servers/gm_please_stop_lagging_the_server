@@ -49,7 +49,16 @@ local statusChanges = {
     }
 }
 
+local function makeAttentionSound()
+    LagAlert.attention = CreateSound( LocalPlayer(), "npc/overwatch/cityvoice/f_evasionbehavior_2_spkr.wav" )
+    LagAlert.attention:Stop()
+end
+
 local function attentionPlease()
+    if not LagAlert.attention then
+        makeAttentionSound()
+    end
+
     LagAlert.attention:PlayEx( 75, 100 )
 
     timer.Simple( 1.2, function()
@@ -191,8 +200,7 @@ local function init()
 end
 
 hook.Add( "InitPostEntity", "LagAlert_SoundInit", function()
-    LagAlert.attention = CreateSound( LocalPlayer(), "npc/overwatch/cityvoice/f_evasionbehavior_2_spkr.wav" )
-    LagAlert.attention:Stop()
+    makeAttentionSound()
 end )
 
 hook.Add( "Think", "LagAlert_Init", function()
