@@ -59,7 +59,7 @@ local function attentionPlease()
         makeAttentionSound()
     end
 
-    LagAlert.attention:PlayEx( 75, 100 )
+    LagAlert.attention:PlayEx( 180, 100 )
 
     timer.Simple( 1.2, function()
         if LagAlert.attention:IsPlaying() then
@@ -122,7 +122,9 @@ local function setStatus( newStatus )
             LagAlert.statusPanel = nil
             LagAlert.displayingStatus = false
 
-            LagAlert.attention:Stop()
+            if LagAlert.attention then
+                LagAlert.attention:Stop()
+            end
         end )
     end
 
@@ -198,10 +200,6 @@ local function init()
         end
     end )
 end
-
-hook.Add( "InitPostEntity", "LagAlert_SoundInit", function()
-    makeAttentionSound()
-end )
 
 hook.Add( "Think", "LagAlert_Init", function()
     hook.Remove( "Think", "LagAlert_Init" )
