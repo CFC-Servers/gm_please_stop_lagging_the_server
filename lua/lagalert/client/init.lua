@@ -195,7 +195,7 @@ local function init()
         end
 
         -- If we were showing an alert but things went back to normal, show a good alert
-        if LagAlert.displayingStatus and performanceLoss <= 0.05 then
+        if LagAlert.displayingStatus and performanceLoss <= 0.15 then
             return setStatus( "good" )
         end
     end )
