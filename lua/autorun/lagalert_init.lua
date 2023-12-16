@@ -6,10 +6,7 @@ if SERVER then
         AddCSLuaFile( "lagalert/client/vgui/" .. element )
     end
 
-    local materials = file.Find( "materials/vgui/lagalert/*.png", "GAME" )
-    for _, material in ipairs( materials ) do
-        resource.AddSingleFile( "materials/vgui/lagalert/" .. material )
-    end
+    resource.AddWrokshop( "3114947614" )
 end
 
 if CLIENT then
