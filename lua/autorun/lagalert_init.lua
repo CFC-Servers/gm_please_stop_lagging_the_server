@@ -6,7 +6,7 @@ if SERVER then
         AddCSLuaFile( "lagalert/client/vgui/" .. element )
     end
 
-    resource.AddWrokshop( "3114947614" )
+    resource.AddWorkshop( "3114947614" )
 end
 
 if CLIENT then
