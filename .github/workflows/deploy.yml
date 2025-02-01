@@ -20,9 +20,11 @@ jobs:
 
       - name: Remove Non-content
         run: |
-          rm -rf $GITHUB_WORKSPACE/project/.git*
-          rm -fv $GITHUB_WORKSPACE/project/LICENSE*
-          rm -fv $GITHUB_WORKSPACE/project/README*
+          rm -rfv $GITHUB_WORKSPACE/project/.git*
+          rm -fv $GITHUB_WORKSPACE/project/LICENSE
+          rm -fv $GITHUB_WORKSPACE/project/README
+          rm -rf $GITHUB_WORKSPACE/project/lua
+
       - uses: CFC-Servers/gmod-upload@master
         with:
           id: 3114947614
